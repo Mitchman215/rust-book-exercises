@@ -4,6 +4,8 @@
 //! Both of these problems involve the `Vec` datatype. I would take a look the `Vec` documentation:
 //! https://doc.rust-lang.org/std/vec/struct.Vec.html
 
+use std::collections::HashSet;
+use std::ptr;
 /// P1a: `insort` is a function that takes a sorted vector `v`, and inserts an element `n` into `v`
 /// such that `v` remains sorted.
 ///
@@ -11,7 +13,15 @@
 ///
 /// Run `cargo test insort` to check your answers.
 pub fn insort(v: &mut Vec<i32>, n: i32) {
-  unimplemented!()
+    let mut insert_i: usize = v.len();
+    for (i, &item) in v.iter().enumerate() {
+        if item > n {
+            insert_i = i;
+            break;
+        }
+    }
+
+    v.insert(insert_i, n)
 }
 
 type Node = i32;
@@ -31,32 +41,52 @@ type Node = i32;
 ///
 /// Run `cargo test connected` to check your answers.
 pub fn connected(edges: &[(&Node, &Node)], src: &Node, dst: &Node) -> bool {
-  unimplemented!()
+    let mut reachable = HashSet::new();
+    reachable.insert(src);
+    let mut to_visit = vec![src];
+    while !to_visit.is_empty() {
+        let next = to_visit.pop().unwrap();
+        if ptr::eq(next, dst) {
+            return true;
+        } else {
+            reachable.insert(next);
+            for (start, to) in edges {
+                if ptr::eq(*start, next)
+                    && !to_visit.iter().any(|&elt| ptr::eq(*to, elt))
+                    && !reachable.iter().any(|&elt| ptr::eq(*to, elt))
+                {
+                    to_visit.push(*to);
+                }
+            }
+        }
+    }
+
+    false
 }
 
 #[cfg(test)]
 mod test {
-  use super::*;
+    use super::*;
 
-  #[test]
-  fn insort_test() {
-    let mut v = vec![1, 5, 8];
+    #[test]
+    fn insort_test() {
+        let mut v = vec![1, 5, 8];
 
-    insort(&mut v, 0);
-    assert_eq!(v, vec![0, 1, 5, 8]);
+        insort(&mut v, 0);
+        assert_eq!(v, vec![0, 1, 5, 8]);
 
-    insort(&mut v, 3);
-    assert_eq!(v, vec![0, 1, 3, 5, 8]);
+        insort(&mut v, 3);
+        assert_eq!(v, vec![0, 1, 3, 5, 8]);
 
-    insort(&mut v, 9);
-    assert_eq!(v, vec![0, 1, 3, 5, 8, 9]);
-  }
+        insort(&mut v, 9);
+        assert_eq!(v, vec![0, 1, 3, 5, 8, 9]);
+    }
 
-  #[test]
-  fn connected_test() {
-    let nodes = vec![1, 1, 1];
-    let edges = vec![(&nodes[0], &nodes[1]), (&nodes[1], &nodes[2])];
-    assert!(connected(&edges, &nodes[0], &nodes[2]));
-    assert!(!connected(&edges, &nodes[2], &nodes[0]))
-  }
+    #[test]
+    fn connected_test() {
+        let nodes = vec![1, 1, 1];
+        let edges = vec![(&nodes[0], &nodes[1]), (&nodes[1], &nodes[2])];
+        assert!(connected(&edges, &nodes[0], &nodes[2]));
+        assert!(!connected(&edges, &nodes[2], &nodes[0]))
+    }
 }
